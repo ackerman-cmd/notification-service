@@ -1,0 +1,12 @@
+spring:
+  jpa:
+    show-sql: true
+
+  mail:
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+            required: false

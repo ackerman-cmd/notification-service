@@ -1,0 +1,45 @@
+spring:
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        default_schema: notification_service
+
+  liquibase:
+    enabled: true
+    default-schema: notification_service
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: notification-service-test
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+    listener:
+      auto-startup: false
+
+  mail:
+    host: localhost
+    port: 3025
+    username: test
+    password: test
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+            required: false
+
+app:
+  kafka:
+    topics:
+      email-verification: email-verification-test
+  mail:
+    from: test@example.com
+  notification:
+    retry:
+      max-retries: 3
+      scheduler-interval-ms: 1000
