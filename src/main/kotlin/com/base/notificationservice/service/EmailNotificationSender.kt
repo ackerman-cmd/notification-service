@@ -3,51 +3,45 @@ package com.base.notificationservice.service
 import com.base.notificationservice.domain.Notification
 import com.base.notificationservice.domain.NotificationChannel
 import com.base.notificationservice.domain.NotificationType
-import jakarta.mail.internet.MimeMessage
+import com.resend.Resend
+import com.resend.services.emails.model.CreateEmailOptions
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.mail.javamail.JavaMailSender
-import org.springframework.mail.javamail.MimeMessageHelper
 import org.springframework.stereotype.Component
 import org.thymeleaf.TemplateEngine
 import org.thymeleaf.context.Context
 
 @Component
 class EmailNotificationSender(
-    private val mailSender: JavaMailSender,
     private val templateEngine: TemplateEngine,
-    @Value("\${app.mail.from}") private val mailFrom: String,
+    @Value("\${app.mail.from}") private val mailRegisterSender: String,
+    @Value("\${resend.api.key}") private val resendApiKey: String,
 ) : NotificationSender {
     override val channel = NotificationChannel.EMAIL
+    private val resend = Resend(resendApiKey)
 
     private val log = LoggerFactory.getLogger(EmailNotificationSender::class.java)
 
     override fun send(notification: Notification): Result<Unit> =
         runCatching {
-            val message: MimeMessage = mailSender.createMimeMessage()
-            val helper = MimeMessageHelper(message, true, "UTF-8")
-
-            helper.setFrom(mailFrom)
-            helper.setTo(notification.recipient)
-            notification.subject?.let { helper.setSubject(it) }
-
             val htmlContent = buildHtmlContent(notification)
-            helper.setText(htmlContent, true)
 
-            mailSender.send(message)
+            val params =
+                CreateEmailOptions
+                    .builder()
+                    .from(mailRegisterSender)
+                    .to(notification.recipient)
+                    .subject(notification.subject ?: "No Subject")
+                    .html(htmlContent)
+                    .build()
+
+            resend.emails().send(params)
+
             log.info(
-                "Email sent: type={}, recipient={}, notificationId={}",
+                "Email sent: type={}, recipient={}, id={}",
                 notification.type,
                 notification.recipient,
                 notification.id,
-            )
-        }.onFailure { ex ->
-            log.error(
-                "Failed to send email: type={}, recipient={}, notificationId={}, error={}",
-                notification.type,
-                notification.recipient,
-                notification.id,
-                ex.message,
             )
         }
 

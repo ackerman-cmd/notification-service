@@ -42,7 +42,14 @@ class NotificationServiceIntegrationTest : AbstractIntegrationTest() {
 
         val messages = greenMail.receivedMessages
         assertTrue(messages.isNotEmpty(), "Email should be delivered to GreenMail")
-        assertEquals("integration@example.com", messages.last().allRecipients.first().toString())
+        assertEquals(
+            "integration@example.com",
+            messages
+                .last()
+                .allRecipients
+                .first()
+                .toString(),
+        )
     }
 
     @Test

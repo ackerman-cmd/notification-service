@@ -54,6 +54,10 @@ spring:
           timeout: 5000
           writetimeout: 5000
 
+resend:
+  api:
+    key: ${RESEND_API_KEY}
+
 app:
   kafka:
     topics:

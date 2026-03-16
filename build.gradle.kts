@@ -63,6 +63,8 @@ dependencies {
 
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    // Source: https://mvnrepository.com/artifact/com.resend/resend-java
+    implementation("com.resend:resend-java:4.12.0")
 }
 
 kotlin {
