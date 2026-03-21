@@ -39,6 +39,5 @@ out/
 ### Kotlin ###
 .kotlin
 .gitattributes
-gradle
 gradlew.bat
 secrets.yaml
