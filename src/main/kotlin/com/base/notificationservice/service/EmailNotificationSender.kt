@@ -14,11 +14,10 @@ import org.thymeleaf.context.Context
 @Component
 class EmailNotificationSender(
     private val templateEngine: TemplateEngine,
-    @Value("\${app.mail.from}") private val mailRegisterSender: String,
-    @Value("\${resend.api.key}") private val resendApiKey: String,
+    private val resend: Resend,
+    @Value("\${app.mail.from}") private val mailFrom: String,
 ) : NotificationSender {
     override val channel = NotificationChannel.EMAIL
-    private val resend = Resend(resendApiKey)
 
     private val log = LoggerFactory.getLogger(EmailNotificationSender::class.java)
 
@@ -29,7 +28,7 @@ class EmailNotificationSender(
             val params =
                 CreateEmailOptions
                     .builder()
-                    .from(mailRegisterSender)
+                    .from(mailFrom)
                     .to(notification.recipient)
                     .subject(notification.subject ?: "No Subject")
                     .html(htmlContent)

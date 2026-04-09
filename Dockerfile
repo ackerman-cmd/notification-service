@@ -1,21 +1,5 @@
-FROM eclipse-temurin:21-jdk-alpine AS builder
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
-
-COPY gradlew settings.gradle.kts build.gradle.kts ./
-COPY gradle ./gradle
-RUN chmod +x gradlew && ./gradlew dependencies --no-daemon -q
-
-COPY src ./src
-RUN ./gradlew bootJar --no-daemon -x test -q
-
-FROM eclipse-temurin:21-jre-alpine AS runtime
-WORKDIR /app
-
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-USER appuser
-
-COPY --from=builder /app/build/libs/*.jar app.jar
-
+COPY build/libs/notification-service-0.0.1-SNAPSHOT.jar app.jar
 EXPOSE 8081
-
 ENTRYPOINT ["java", "-jar", "app.jar"]

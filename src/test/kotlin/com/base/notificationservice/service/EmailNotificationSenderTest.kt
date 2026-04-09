@@ -4,43 +4,43 @@ import com.base.notificationservice.domain.Notification
 import com.base.notificationservice.domain.NotificationChannel
 import com.base.notificationservice.domain.NotificationStatus
 import com.base.notificationservice.domain.NotificationType
+import com.resend.Resend
+import com.resend.core.exception.ResendException
+import com.resend.services.emails.model.CreateEmailOptions
+import com.resend.services.emails.model.CreateEmailResponse
 import io.mockk.every
-import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.verify
-import jakarta.mail.internet.MimeMessage
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.springframework.mail.javamail.JavaMailSender
 import org.thymeleaf.TemplateEngine
 import org.thymeleaf.context.IContext
 import java.util.UUID
 
 class EmailNotificationSenderTest {
-    private val mailSender: JavaMailSender = mockk()
+    private val resend: Resend = mockk()
+    private val emailsService: com.resend.services.emails.Emails = mockk()
     private val templateEngine: TemplateEngine = mockk()
-    private val mimeMessage: MimeMessage = mockk(relaxed = true)
 
-    private val sender = EmailNotificationSender(mailSender, templateEngine, "noreply@test.com")
+    private val sender = EmailNotificationSender(templateEngine, resend, "noreply@test.com")
 
     @Test
-    fun `send - returns success when mail sent`() {
-        every { mailSender.createMimeMessage() } returns mimeMessage
+    fun `send - returns success when email sent`() {
+        every { resend.emails() } returns emailsService
+        every { emailsService.send(any<CreateEmailOptions>()) } returns CreateEmailResponse()
         every { templateEngine.process(any<String>(), any<IContext>()) } returns "<html>test</html>"
-        justRun { mailSender.send(mimeMessage) }
 
-        val notification = buildNotification()
-        val result = sender.send(notification)
+        val result = sender.send(buildNotification())
 
         assertTrue(result.isSuccess)
-        verify(exactly = 1) { mailSender.send(mimeMessage) }
+        verify(exactly = 1) { emailsService.send(any<CreateEmailOptions>()) }
     }
 
     @Test
-    fun `send - returns failure when mail throws`() {
-        every { mailSender.createMimeMessage() } returns mimeMessage
+    fun `send - returns failure when resend throws`() {
+        every { resend.emails() } returns emailsService
+        every { emailsService.send(any<CreateEmailOptions>()) } throws ResendException("API error")
         every { templateEngine.process(any<String>(), any<IContext>()) } returns "<html>test</html>"
-        every { mailSender.send(mimeMessage) } throws RuntimeException("Connection refused")
 
         val result = sender.send(buildNotification())
 

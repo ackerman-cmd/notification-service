@@ -14,7 +14,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: validate
     properties:
       hibernate:
         default_schema: notification_service
@@ -38,22 +38,6 @@ spring:
       properties:
         max.poll.records: 10
 
-  mail:
-    host: ${mail.host:localhost}
-    port: ${mail.port:1025}
-    username: ${mail.username:}
-    password: ${mail.password:}
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-            required: true
-          connectiontimeout: 5000
-          timeout: 5000
-          writetimeout: 5000
-
 resend:
   api:
     key: ${RESEND_API_KEY}
@@ -63,7 +47,7 @@ app:
     topics:
       email-verification: email-verification
   mail:
-    from: ${mail.from:noreply@example.com}
+    from: ${mail.from}
   notification:
     retry:
       max-retries: ${NOTIFICATION_MAX_RETRIES:5}

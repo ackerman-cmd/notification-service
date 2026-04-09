@@ -6,6 +6,10 @@ import com.base.notificationservice.domain.NotificationStatus
 import com.base.notificationservice.domain.NotificationType
 import com.base.notificationservice.repository.NotificationRepository
 import com.base.notificationservice.service.NotificationService
+import com.resend.services.emails.model.CreateEmailOptions
+import com.resend.services.emails.model.CreateEmailResponse
+import io.mockk.every
+import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -21,61 +25,45 @@ class NotificationServiceIntegrationTest : AbstractIntegrationTest() {
     lateinit var notificationRepository: NotificationRepository
 
     @Test
-    fun `send - saves notification with SENT status and delivers email via GreenMail`() {
-        val notification =
-            Notification(
-                id = UUID.randomUUID(),
-                userId = UUID.randomUUID(),
-                channel = NotificationChannel.EMAIL,
-                type = NotificationType.EMAIL_VERIFICATION,
-                recipient = "integration@example.com",
-                subject = "Подтверждение email адреса",
-                payload = """{"username":"john","verificationUrl":"http://localhost/verify?token=abc"}""",
-            )
+    fun `retry - saves notification with SENT status when Resend succeeds`() {
+        val emailsService: com.resend.services.emails.Emails = mockk()
+        every { resend.emails() } returns emailsService
+        every { emailsService.send(any<CreateEmailOptions>()) } returns CreateEmailResponse()
 
+        val notification = buildNotification()
         notificationService.send(notification)
+        notificationService.retry(notification)
 
         val saved = notificationRepository.findById(notification.id!!)
         assertTrue(saved.isPresent)
         assertEquals(NotificationStatus.SENT, saved.get().status)
         assertNotNull(saved.get().sentAt)
-
-        val messages = greenMail.receivedMessages
-        assertTrue(messages.isNotEmpty(), "Email should be delivered to GreenMail")
-        assertEquals(
-            "integration@example.com",
-            messages
-                .last()
-                .allRecipients
-                .first()
-                .toString(),
-        )
     }
 
     @Test
-    fun `send - marks FAILED when SMTP is unreachable`() {
-        greenMail.stop()
+    fun `retry - marks FAILED when Resend throws`() {
+        val emailsService: com.resend.services.emails.Emails = mockk()
+        every { resend.emails() } returns emailsService
+        every { emailsService.send(any<CreateEmailOptions>()) } throws RuntimeException("Connection refused")
 
-        try {
-            val notification =
-                Notification(
-                    id = UUID.randomUUID(),
-                    userId = UUID.randomUUID(),
-                    channel = NotificationChannel.EMAIL,
-                    type = NotificationType.EMAIL_VERIFICATION,
-                    recipient = "fail@example.com",
-                    subject = "Should fail",
-                    payload = """{"username":"x","verificationUrl":"http://localhost"}""",
-                )
+        val notification = buildNotification()
+        notificationService.send(notification)
+        notificationService.retry(notification)
 
-            notificationService.send(notification)
-
-            val saved = notificationRepository.findById(notification.id!!)
-            assertTrue(saved.isPresent)
-            assertEquals(NotificationStatus.FAILED, saved.get().status)
-            assertEquals(1, saved.get().retryCount)
-        } finally {
-            greenMail.start()
-        }
+        val saved = notificationRepository.findById(notification.id!!)
+        assertTrue(saved.isPresent)
+        assertEquals(NotificationStatus.FAILED, saved.get().status)
+        assertEquals(1, saved.get().retryCount)
     }
+
+    private fun buildNotification() =
+        Notification(
+            id = UUID.randomUUID(),
+            userId = UUID.randomUUID(),
+            channel = NotificationChannel.EMAIL,
+            type = NotificationType.EMAIL_VERIFICATION,
+            recipient = "integration@example.com",
+            subject = "Подтверждение email адреса",
+            payload = """{"username":"john","verificationUrl":"http://localhost/verify?token=abc"}""",
+        )
 }

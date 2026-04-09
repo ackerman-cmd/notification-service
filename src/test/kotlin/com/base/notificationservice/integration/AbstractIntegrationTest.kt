@@ -1,9 +1,7 @@
 package com.base.notificationservice.integration
 
-import com.icegreen.greenmail.configuration.GreenMailConfiguration
-import com.icegreen.greenmail.junit5.GreenMailExtension
-import com.icegreen.greenmail.util.ServerSetupTest
-import org.junit.jupiter.api.extension.RegisterExtension
+import com.ninjasquad.springmockk.MockkBean
+import com.resend.Resend
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
@@ -13,6 +11,9 @@ import org.testcontainers.containers.PostgreSQLContainer
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 abstract class AbstractIntegrationTest {
+    @MockkBean
+    lateinit var resend: Resend
+
     companion object {
         @JvmStatic
         val postgres: PostgreSQLContainer<Nothing> =
@@ -34,12 +35,5 @@ abstract class AbstractIntegrationTest {
             registry.add("spring.datasource.password", postgres::getPassword)
             registry.add("spring.datasource.driver-class-name") { "org.postgresql.Driver" }
         }
-
-        @RegisterExtension
-        @JvmField
-        val greenMail: GreenMailExtension =
-            GreenMailExtension(ServerSetupTest.SMTP)
-                .withConfiguration(GreenMailConfiguration.aConfig().withUser("test", "test"))
-                .withPerMethodLifecycle(false)
     }
 }

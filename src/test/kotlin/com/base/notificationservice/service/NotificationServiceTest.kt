@@ -26,38 +26,49 @@ class NotificationServiceTest {
     }
 
     @Test
-    fun `send - marks SENT on success`() {
+    fun `send - saves notification with PENDING status`() {
+        val notification = buildNotification()
+        every { notificationRepository.save(any()) } answers { firstArg() }
+
+        service.send(notification)
+
+        verify(exactly = 1) { notificationRepository.save(any()) }
+        assertEquals(NotificationStatus.PENDING, notification.status)
+    }
+
+    @Test
+    fun `retry - marks SENT on success`() {
         val notification = buildNotification()
         every { notificationRepository.save(any()) } answers { firstArg() }
         every { emailSender.send(any()) } returns Result.success(Unit)
 
-        service.send(notification)
+        service.retry(notification)
 
-        verify(exactly = 2) { notificationRepository.save(any()) }
+        verify(exactly = 1) { notificationRepository.save(any()) }
         assertEquals(NotificationStatus.SENT, notification.status)
     }
 
     @Test
-    fun `send - marks FAILED on sender error`() {
+    fun `retry - marks FAILED on sender error`() {
         val notification = buildNotification()
         every { notificationRepository.save(any()) } answers { firstArg() }
-        every { emailSender.send(any()) } returns Result.failure(RuntimeException("SMTP error"))
+        every { emailSender.send(any()) } returns Result.failure(RuntimeException("API error"))
 
-        service.send(notification)
+        service.retry(notification)
 
         assertEquals(NotificationStatus.FAILED, notification.status)
         assertEquals(1, notification.retryCount)
     }
 
     @Test
-    fun `send - marks FAILED when no sender registered for channel`() {
+    fun `retry - marks FAILED when no sender registered for channel`() {
         every { emailSender.channel } returns NotificationChannel.SMS
         service = NotificationService(notificationRepository, listOf(emailSender))
 
         val notification = buildNotification()
         every { notificationRepository.save(any()) } answers { firstArg() }
 
-        service.send(notification)
+        service.retry(notification)
 
         assertEquals(NotificationStatus.FAILED, notification.status)
     }

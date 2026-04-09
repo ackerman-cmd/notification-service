@@ -20,18 +20,9 @@ spring:
     listener:
       auto-startup: false
 
-  mail:
-    host: localhost
-    port: 3025
-    username: test
-    password: test
-    properties:
-      mail:
-        smtp:
-          auth: false
-          starttls:
-            enable: false
-            required: false
+resend:
+  api:
+    key: test-api-key
 
 app:
   kafka:
