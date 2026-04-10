@@ -64,3 +64,9 @@ management:
   endpoint:
     health:
       show-details: always
+logging:
+  level:
+    org.springframework.kafka.listener: DEBUG
+    org.apache.kafka.clients.consumer.internals: DEBUG
+  pattern:
+    console: '{"timestamp":"%d{yyyy-MM-dd HH:mm:ss.SSS}","level":"%p","logger":"%logger{36}","message":"%msg"}%n'
