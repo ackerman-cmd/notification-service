@@ -46,6 +46,7 @@ app:
   kafka:
     topics:
       email-verification: email-verification
+      daily-report: report.daily
   mail:
     from: ${MAIL_FROM}
   notification:

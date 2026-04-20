@@ -1,5 +1,6 @@
 package com.base.notificationservice.config
 
+import com.base.notificationservice.event.DailyReportEvent
 import com.base.notificationservice.event.EmailVerificationEvent
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.kafka.clients.consumer.ConsumerConfig
@@ -45,6 +46,7 @@ class KafkaConsumerConfig(
                 idClassMapping =
                     mapOf(
                         "EMAIL_VERIFICATION" to EmailVerificationEvent::class.java,
+                        "DAILY_REPORT" to DailyReportEvent::class.java,
                     )
             }
 

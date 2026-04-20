@@ -4,6 +4,7 @@ import com.base.notificationservice.domain.Notification
 import com.base.notificationservice.domain.NotificationChannel
 import com.base.notificationservice.domain.NotificationStatus
 import com.base.notificationservice.domain.NotificationType
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.resend.Resend
 import com.resend.core.exception.ResendException
 import com.resend.services.emails.model.CreateEmailOptions
@@ -21,8 +22,9 @@ class EmailNotificationSenderTest {
     private val resend: Resend = mockk()
     private val emailsService: com.resend.services.emails.Emails = mockk()
     private val templateEngine: TemplateEngine = mockk()
+    private val objectMapper: ObjectMapper = mockk()
 
-    private val sender = EmailNotificationSender(templateEngine, resend, "noreply@test.com")
+    private val sender = EmailNotificationSender(templateEngine, resend, objectMapper,"noreply@test.com")
 
     @Test
     fun `send - returns success when email sent`() {

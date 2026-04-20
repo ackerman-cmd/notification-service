@@ -5,4 +5,5 @@ enum class NotificationType {
     PASSWORD_RESET,
     ACCOUNT_BLOCKED,
     ACCOUNT_ACTIVATED,
+    DAILY_REPORT,
 }
