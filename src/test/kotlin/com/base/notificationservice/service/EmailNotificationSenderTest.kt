@@ -24,7 +24,7 @@ class EmailNotificationSenderTest {
     private val templateEngine: TemplateEngine = mockk()
     private val objectMapper: ObjectMapper = mockk()
 
-    private val sender = EmailNotificationSender(templateEngine, resend, objectMapper,"noreply@test.com")
+    private val sender = EmailNotificationSender(templateEngine, resend, objectMapper, "noreply@test.com")
 
     @Test
     fun `send - returns success when email sent`() {
